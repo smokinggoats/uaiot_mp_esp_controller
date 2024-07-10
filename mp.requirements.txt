@@ -1,0 +1,4 @@
+adafruit-ampy
+github:peterhinch/micropython-async/v3/threadsafe
+github:peterhinch/micropython-async/v3/threadsafe
+github:peterhinch/micropython-mqtt

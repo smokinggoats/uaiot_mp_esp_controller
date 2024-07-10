@@ -1,0 +1,4 @@
+src/data/config.json
+src/lib
+*.bin
+venv
