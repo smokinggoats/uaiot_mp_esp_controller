@@ -1,11 +1,9 @@
 
 import time
 import gc
-from services.config import Config
-from services.led_controller import LEDController, MatrixService
-
+from lib.umqtt.simple import MQTTClient
 import asyncio
-from app import App
+from modules.app import App
 
 
 def set_global_exception():
@@ -19,9 +17,13 @@ def set_global_exception():
 
 async def main():
     set_global_exception()
-    isntance = App()
-    task = asyncio.create_task(isntance.run())
-    await isntance.run_forever()  # Non-terminating method
+    app = App()
+    app.init()
+    tasks = app.generate_tasks()
+    while True:
+        await asyncio.sleep(0)
+
+
 try:
     asyncio.run(main())
 finally:
