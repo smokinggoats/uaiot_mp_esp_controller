@@ -17,8 +17,10 @@
         "password": ""
     },
     "mqtt": {
-        "url": "",
+        "host": "",
         "user": "",
-        "password": ""
+        "password": "",
+        "id": "",
+        "listener_topic": ""
     }
 }
