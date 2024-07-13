@@ -19,8 +19,7 @@ connect:
 upload_files:
 	@SRC=lib make upload_file
 	@SRC=data make upload_file
-	@SRC=infrastructure make upload_file
-	@SRC=services make upload_file
+	@SRC=modules make upload_file
 	@SRC=boot.py make upload_file
 	@SRC=main.py make upload_file
 
