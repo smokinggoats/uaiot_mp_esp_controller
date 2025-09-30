@@ -1,29 +1,41 @@
 flash_esp8266:
-	esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash --flash_size=detect -fm dio 0 firmware/esp8266/ESP8266_GENERIC-20240602-v1.23.0.bin
+# uv run esptool --port /dev/ttyUSB0 --baud 115200 write_flash --flash_size=detect -fm dio 0 firmware/ESP8266_GENERIC-20250911-v1.26.1.bin
+# 	uv run esptool --port /dev/ttyUSB0 write-flash -e --flash-size=detect -fm dio 0 firmware/ESP8266_GENERIC-FLASH_2M_ROMFS-20250911-v1.26.1.bin
+		
+	
 #-fm dout 
 flash_esp32:
-	esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 write_flash -z 0x1000 -fm dio firmware/esp32/ESP32_GENERIC-20240602-v1.23.0.bin
+	uv run esptool --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -e -z 0x1000 -fm dio firmware/ESP32_GENERIC-20250911-v1.26.1.bin
 
 erase:
-	esptool.py --port /dev/ttyUSB0 erase_flash
+	uv run esptool --port /dev/ttyUSB0 erase_flash
 
 upload_file:
-	ampy --port /dev/ttyUSB0 put src/${SRC} ${SRC}
+	uv run ampy --port /dev/ttyUSB0 put src/${SRC} ${SRC}
 
 list_files:
-	ampy --port /dev/ttyUSB0 ls
+	uv run ampy --port /dev/ttyUSB0 ls
 
 connect:
 	picocom /dev/ttyUSB0 -b115200
 
-upload_files:
-	@SRC=lib make upload_file
+upload_config:
 	@SRC=data make upload_file
+
+upload_files: upload_config
+# 	@SRC=lib make upload_file
 	@SRC=modules make upload_file
 	@SRC=boot.py make upload_file
 	@SRC=main.py make upload_file
 
-esp8266: erase flash_esp8266 upload_files
+serial:
+	minicom -D /dev/ttyUSB0
 
-esp32: erase flash_esp32 upload_files
-	
+
+install:
+	uv run mpremote connect /dev/ttyUSB0 mip install --no-mpy github:peterhinch/micropython-async/v3/threadsafe
+	uv run mpremote connect /dev/ttyUSB0 mip install --no-mpy neopixel
+
+esp8266: flash_esp8266
+
+esp32: erase flash_esp32

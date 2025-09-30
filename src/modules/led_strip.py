@@ -1,7 +1,7 @@
 from math import floor
 from time import sleep_ms
 import gc
-from lib import neopixel
+import neopixel
 from machine import Pin
 import asyncio
 
@@ -9,12 +9,22 @@ import asyncio
 class LedStripConfig:
     pin: int = 2
     size: int = 16
-    selected_efect: int = 0
+    selected_effect: int = 0
+    fill_color: list[int]
 
     def __init__(self, **kwargs) -> None:
-        self.pin = kwargs.get('pin', 2)
-        self.size = kwargs.get('size', 8)
-        self.selected_efect = kwargs.get('selected_efect', 0)
+        self.pin = kwargs.get("pin", 2)
+        self.size = kwargs.get("size", 8)
+        self.selected_effect = kwargs.get("selected_effect", 0)
+        self.fill_color = kwargs.get("fill_color", [255, 255, 255])
+
+    def export(self):
+        return {
+            "pin": self.pin,
+            "size": self.size,
+            "selected_effect": self.selected_effect,
+            "fill_color": self.fill_color,
+        }
 
 
 class LEDMatrixService:
@@ -41,42 +51,51 @@ class LEDMatrixService:
         x1, y1 = start
         x2, y2 = end
         m = abs((y2 - y1) / (x2 - x1)) if (x2 - x1) != 0 else 0
-        b = y1 - m*x1
+        b = y1 - m * x1
         # print(start, end, m, b)
 
         # print("x range")
-        for x in range(x1, x2+1):
-            y = min(m*x + b,  self.width - 1)
+        for x in range(x1, x2 + 1):
+            y = min(m * x + b, self.width - 1)
             # print(x, y)
             self.setColor(controller, abs(round(x)), abs(round(y)), color)
 
         # print("y range")
-        for y in range(y1, y2+1):
-            x = min((y-b)/m if m != 0 else x1, self.height - 1)
+        for y in range(y1, y2 + 1):
+            x = min((y - b) / m if m != 0 else x1, self.height - 1)
             # print(x, y)
             self.setColor(controller, abs(round(x)), abs(round(y)), color)
 
-    async def dance(self, controller, wait=64, colors=[
-        (240, 0, 0),
-        (200, 0, 80),
-        (120, 0, 120),
-        (80, 0, 200),
-    ]):
+    async def dance(
+        self,
+        controller,
+        wait=64,
+        colors=[
+            (240, 0, 0),
+            (200, 0, 80),
+            (120, 0, 120),
+            (80, 0, 200),
+        ],
+    ):
         _colors = colors
         while True:
             for index in range(0, 4):
                 color = _colors[index]
-                self.make_line(controller, color,
-                               (0+index, 0+index), (0+index, 7-index))
-                self.make_line(controller, color,
-                               (0+index, 0+index), (7-index, 0+index))
-                self.make_line(controller, color,
-                               (7-index, 0+index), (7-index, 7-index))
-                self.make_line(controller, color,
-                               (0+index, 7-index), (7-index, 7-index))
+                self.make_line(
+                    controller, color, (0 + index, 0 + index), (0 + index, 7 - index)
+                )
+                self.make_line(
+                    controller, color, (0 + index, 0 + index), (7 - index, 0 + index)
+                )
+                self.make_line(
+                    controller, color, (7 - index, 0 + index), (7 - index, 7 - index)
+                )
+                self.make_line(
+                    controller, color, (0 + index, 7 - index), (7 - index, 7 - index)
+                )
 
             controller.controller.write()
-            await asyncio.sleep(wait/1000)
+            await asyncio.sleep(wait / 1000)
             _colors = _colors[1:] + _colors[:1]
             gc.collect()
 
@@ -85,8 +104,7 @@ class LEDStripModule:
     config: LedStripConfig
 
     def __init__(self, config: LedStripConfig) -> None:
-        self.controller = self.create_led_controller(
-            config.pin, config.size)
+        self.controller = self.create_led_controller(config.pin, config.size)
         self.config = config
         self.ma = LEDMatrixService(16, 80, 8)
 
@@ -103,19 +121,19 @@ class LEDStripModule:
 
     def hsv_to_rgb(self, _h, s, v):
         h = _h % 360
-        hi = floor(h/60) % 6
-        m = ((h)/60) - hi
-        p = v * (1-s)
-        q = v * (1-(m*s))
-        t = v * (1-((1-m)*s))
+        hi = floor(h / 60) % 6
+        m = ((h) / 60) - hi
+        p = v * (1 - s)
+        q = v * (1 - (m * s))
+        t = v * (1 - ((1 - m) * s))
 
         opts = {
-            0: (round(v*255), round(t*255), round(p*255)),
-            1: (round(q*255), round(v*255), round(p*255)),
-            2: (round(p*255), round(v*255), round(t*255)),
-            3: (round(p*255), round(q*255), round(v*255)),
-            4: (round(t*255), round(p*255), round(v*255)),
-            5: (round(v*255), round(p*255), round(q*255)),
+            0: (round(v * 255), round(t * 255), round(p * 255)),
+            1: (round(q * 255), round(v * 255), round(p * 255)),
+            2: (round(p * 255), round(v * 255), round(t * 255)),
+            3: (round(p * 255), round(q * 255), round(v * 255)),
+            4: (round(t * 255), round(p * 255), round(v * 255)),
+            5: (round(v * 255), round(p * 255), round(q * 255)),
         }
 
         return opts[hi]
@@ -132,31 +150,38 @@ class LEDStripModule:
                 # in the current hue run
                 # firt pixel is the last pixel in the hue array
                 # if in a circle, would run clockwise
-                pos = round(((h*16)) + (mod*i)) % 360
+                pos = round((h * 16) + (mod * i)) % 360
 
                 # convert hue value to RBG
-                self.controller[i] = self.hsv_to_rgb(
-                    pos, saturation/100, value/100)
+                self.controller[i] = self.hsv_to_rgb(pos, saturation / 100, value / 100)
             # write all pixels after updating them
             self.controller.write()
             sleep_ms(wait)
         return True
 
     def clear(self):
-        self.controller.fill((0, 0, 0))
+        # warm fluorescent
+        # fill_color = (255, 241, 224)
+        # Clear Blue Sky
+        # fill_color = [64, 156, 255]
+        # Overcast Sky
+        # fill_color = [201, 226, 255]
+        self.controller.fill(self.config.fill_color)
+        # for i in range(self.config.size):
+        #     self.controller[i] = (255,255,255)
         self.controller.write()
         return True
-    
+
     # tasks
 
     async def render(self):
         while True:
-            await self.ma.dance(self, wait=64, colors=[
-                (240, 0, 0),
-                (200, 0, 80),
-                (120, 0, 120),
-                (80, 0, 200),
-            ])
+            self.clear()
+            # await self.ma.dance(self, wait=64, colors=[
+            #     (240, 0, 0),
+            #     (200, 0, 80),
+            #     (120, 0, 120),
+            #     (80, 0, 200),
+            # ])
             gc.collect()
             await asyncio.sleep(0)
-

@@ -16,8 +16,8 @@ def file_exists(filename):
         return False
 
 
-def create_json(file_path: str, data: dict, flag: str = 'w'):
-    *path_list, _ = file_path.split('/')
+def create_json(file_path: str, data: dict, flag: str = "w"):
+    *path_list, _ = file_path.split("/")
     recurssive_mkdir(path_list)
     with open(file_path, flag) as file:
         file.write(json.dumps(data))
@@ -35,6 +35,16 @@ def open_or_create_json(file_path: str, data: dict) -> bool:
             return json.load(file)
     else:
         return create_json(file_path, data)
+
+
+def write_json(file_path: str, data: dict) -> bool:
+    try:
+        with open(file_path, mode="w") as f:
+            f.write(json.dumps(data))
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 
 def mkdir(path):
@@ -57,7 +67,7 @@ def recurssive_mkdir(path_list: list[str] | None = None):
     last_path, *sub_path = path_list
     mkdir(last_path)
     if len(sub_path) > 0:
-        sub_path[0] = f'{last_path}/{sub_path[0]}'
+        sub_path[0] = f"{last_path}/{sub_path[0]}"
         return recurssive_mkdir(sub_path)
     return True
 
@@ -65,6 +75,6 @@ def recurssive_mkdir(path_list: list[str] | None = None):
 def recurssive_deldir(path_list: list[str] | None = None):
     last_path, *sub_path = path_list
     if len(sub_path) > 0:
-        sub_path[0] = f'{last_path}/{sub_path[0]}'
+        sub_path[0] = f"{last_path}/{sub_path[0]}"
         recurssive_deldir(sub_path)
     return rmdir(last_path)

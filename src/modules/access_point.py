@@ -9,9 +9,16 @@ class APModuleConfig:
     password: str
 
     def __init__(self, **kwargs) -> None:
-        self.ssid = kwargs.get('ssid')
-        self.user = kwargs.get('user')
-        self.password = kwargs.get('password')
+        self.ssid = kwargs.get("ssid")
+        self.user = kwargs.get("user")
+        self.password = kwargs.get("password")
+
+    def export(self):
+        return {
+            "ssid": self.ssid,
+            "user": self.user,
+            "password": self.password,
+        }
 
 
 class StationModule:
@@ -19,7 +26,7 @@ class StationModule:
     connected: bool
 
     def __init__(self, config: APModuleConfig) -> None:
-        self.config = config        
+        self.config = config
         self.station = network.WLAN(network.AP_IF)
         self.station.config(ssid=self.config.ssid)
 

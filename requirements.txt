@@ -1,4 +1,0 @@
-esptool
-autopep8
-mpremote
-adafruit-ampy

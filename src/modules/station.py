@@ -9,9 +9,16 @@ class StationModuleConfig:
     password: str
 
     def __init__(self, **kwargs) -> None:
-        self.ssid = kwargs.get('ssid')
-        self.hostname = kwargs.get('user')
-        self.password = kwargs.get('password')
+        self.ssid = kwargs.get("ssid")
+        self.hostname = kwargs.get("hostname")
+        self.password = kwargs.get("password")
+
+    def export(self):
+        return {
+            "ssid": self.ssid,
+            "hostname": self.hostname,
+            "password": self.password,
+        }
 
 
 class StationModule:

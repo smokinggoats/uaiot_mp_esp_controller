@@ -1,26 +1,28 @@
 {
-    "app": {
-        "led": {
-            "size": 16,
-            "pin": 2,
-            "selected_effect": 0
-        }
-    },
-    "station": {
-        "ssid": "",
-        "user": "",
-        "password": ""
-    },
-    "ap": {
-        "ssid": "",
-        "user": "",
-        "password": ""
-    },
-    "mqtt": {
-        "host": "",
-        "user": "",
-        "password": "",
-        "id": "",
-        "listener_topic": ""
+  "app": {
+    "led": {
+      "size": 16,
+      "pin": 2,
+      "selected_effect": 0
     }
+  },
+  "station": {
+    "ssid": "",
+    "user": "",
+    "password": ""
+  },
+  "ap": {
+    "ssid": "",
+    "user": "",
+    "password": ""
+  },
+  "mqtt": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "id": "ID",
+    "listener_topic": "ID/commands",
+    "publish_topic": "ID/output",
+    "alive_timeout_s": 1000
+  }
 }
