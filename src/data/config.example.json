@@ -3,7 +3,8 @@
     "led": {
       "size": 16,
       "pin": 2,
-      "selected_effect": 0
+      "selected_effect": 0,
+      "animation_delay_ms": 50
     }
   },
   "station": {

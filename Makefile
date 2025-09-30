@@ -38,4 +38,4 @@ install:
 
 esp8266: flash_esp8266
 
-esp32: erase flash_esp32
+esp32: flash_esp32

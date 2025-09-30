@@ -1,6 +1,7 @@
 import network
 import socket
 import requests
+import ntptime
 
 
 class StationModuleConfig:
@@ -43,6 +44,7 @@ class StationModule:
             while not self.station.isconnected():
                 print("connecting...")
             print("connected")
+            ntptime.settime()
             self.connected = True
         self.update_ip()
         print(f"IP_ADDR_{self.ip}")

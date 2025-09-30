@@ -1,7 +1,7 @@
 from umqtt.simple import MQTTClient
 import asyncio
-from json import loads
-
+from json import loads, dumps
+import time
 
 class MQTTModuleConfig:
     id: str
@@ -67,7 +67,11 @@ class MQTTModule:
         n = 0
         while True:
             print("publish", n)
-            self.client.publish(self.config.publish_topic, '{"ping":"pong"}')
+            [year, month, day, hour, min, sec, *_] = time.localtime()
+            now = f"{year}-{month}-{day} {hour}:{min}:{sec}"
+            self.client.publish(
+                self.config.publish_topic, dumps({"ping": "pong", "timestamp": now})
+            )
             n += 1
             await asyncio.sleep(self.config.alive_timeout_s)
 

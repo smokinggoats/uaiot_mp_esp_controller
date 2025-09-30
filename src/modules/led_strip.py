@@ -11,12 +11,14 @@ class LedStripConfig:
     size: int = 16
     selected_effect: int = 0
     fill_color: list[int]
+    animation_delay_ms: int
 
     def __init__(self, **kwargs) -> None:
         self.pin = kwargs.get("pin", 2)
         self.size = kwargs.get("size", 8)
         self.selected_effect = kwargs.get("selected_effect", 0)
         self.fill_color = kwargs.get("fill_color", [255, 255, 255])
+        self.animation_delay_ms = int(kwargs.get("animation_delay_ms", 100))
 
     def export(self):
         return {
@@ -106,7 +108,7 @@ class LEDStripModule:
     def __init__(self, config: LedStripConfig) -> None:
         self.controller = self.create_led_controller(config.pin, config.size)
         self.config = config
-        self.ma = LEDMatrixService(16, 80, 8)
+        # self.ma = LEDMatrixService(16, 80, 8)
 
     def create_led_controller(self, pin, size=8):
         controller = neopixel.NeoPixel(Pin(pin, Pin.OUT), size)
@@ -138,7 +140,7 @@ class LEDStripModule:
 
         return opts[hi]
 
-    def rainbow_cycle(self, wait):
+    async def rainbow_cycle(self, wait):
         mod = 360 / self.controller.n
         saturation = 100
         value = 100
@@ -156,19 +158,14 @@ class LEDStripModule:
                 self.controller[i] = self.hsv_to_rgb(pos, saturation / 100, value / 100)
             # write all pixels after updating them
             self.controller.write()
-            sleep_ms(wait)
+            if self.config.selected_effect == 0:
+                await asyncio.sleep(wait / 1000)
+            else:
+                break
         return True
 
     def clear(self):
-        # warm fluorescent
-        # fill_color = (255, 241, 224)
-        # Clear Blue Sky
-        # fill_color = [64, 156, 255]
-        # Overcast Sky
-        # fill_color = [201, 226, 255]
         self.controller.fill(self.config.fill_color)
-        # for i in range(self.config.size):
-        #     self.controller[i] = (255,255,255)
         self.controller.write()
         return True
 
@@ -176,12 +173,10 @@ class LEDStripModule:
 
     async def render(self):
         while True:
-            self.clear()
-            # await self.ma.dance(self, wait=64, colors=[
-            #     (240, 0, 0),
-            #     (200, 0, 80),
-            #     (120, 0, 120),
-            #     (80, 0, 200),
-            # ])
+            # self.clear()
+            if self.config.selected_effect == 0:
+                await self.rainbow_cycle(self.config.animation_delay_ms)
+            else:
+                self.clear()
             gc.collect()
             await asyncio.sleep(0)
