@@ -1,6 +1,6 @@
 flash_esp8266:
-# uv run esptool --port /dev/ttyUSB0 --baud 115200 write_flash --flash_size=detect -fm dio 0 firmware/ESP8266_GENERIC-20250911-v1.26.1.bin
-# 	uv run esptool --port /dev/ttyUSB0 write-flash -e --flash-size=detect -fm dio 0 firmware/ESP8266_GENERIC-FLASH_2M_ROMFS-20250911-v1.26.1.bin
+# uv run esptool --port /dev/ttyUSB0 --baud 115200 write_flash --flash_size=detect -fm dio 0 firmware/ESP8266_GENERIC-FLASH_2M_ROMFS-20250911-v1.26.1.bin
+	uv run esptool --port /dev/ttyUSB0 --baud 460800 write-flash -e --flash-size=detect -fm dout 0 firmware/ESP8266_GENERIC-20250911-v1.26.1.bin
 		
 	
 #-fm dout 

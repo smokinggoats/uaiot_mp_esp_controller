@@ -164,6 +164,19 @@ class LEDStripModule:
                 break
         return True
 
+    async def rainbow(self, wait):
+        saturation = 100
+        value = 100
+        # for each 1% of hue
+        for h in range(360):
+            self.controller.fill(self.hsv_to_rgb(h, saturation / 100, value / 100))
+            self.controller.write()
+            if self.config.selected_effect == 1:
+                await asyncio.sleep(wait / 1000)
+            else:
+                break
+        return True
+
     def clear(self):
         self.controller.fill(self.config.fill_color)
         self.controller.write()
@@ -176,6 +189,8 @@ class LEDStripModule:
             # self.clear()
             if self.config.selected_effect == 0:
                 await self.rainbow_cycle(self.config.animation_delay_ms)
+            elif self.config.selected_effect == 1:
+                await self.rainbow(self.config.animation_delay_ms)
             else:
                 self.clear()
             gc.collect()

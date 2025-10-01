@@ -15,3 +15,9 @@
 - EventBus integration for App Module
 - LightSensor Module
 - TemperatureSensor Module
+
+## Fix reset loop esp8266
+
+```python
+import network; network.WLAN(network.AP_IF).active(False)
+```
