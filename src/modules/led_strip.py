@@ -1,10 +1,11 @@
-from math import floor
-from time import sleep_ms
+import asyncio
 import gc
+from math import floor
 from random import getrandbits
+from time import sleep_ms
+
 import neopixel
 from machine import Pin
-import asyncio
 
 
 def random():
@@ -157,27 +158,27 @@ class LEDStripModule:
 
     def hsv_to_rgb(self, _h, _s, _v):
         h, s, v = _h / 360, _s / 100, _v / 100
-        if s == 0.0:
-            return v, v, v
-        i = int(h * 6.0)  # XXX assume int() truncates!
-        f = (h * 6.0) - i
-        p = v * (1.0 - s)
-        q = v * (1.0 - s * f)
-        t = v * (1.0 - s * (1.0 - f))
-        i = i % 6
-        result = 0, 0, 0
-        if i == 0:
-            result = v, t, p
-        if i == 1:
-            result = q, v, p
-        if i == 2:
-            result = p, v, t
-        if i == 3:
-            result = p, q, v
-        if i == 4:
-            result = t, p, v
-        if i == 5:
-            result = v, p, q
+
+        result = v, v, v
+        if s != 0.0:
+            i = int(h * 6.0)  # XXX assume int() truncates!
+            f = (h * 6.0) - i
+            p = v * (1.0 - s)
+            q = v * (1.0 - s * f)
+            t = v * (1.0 - s * (1.0 - f))
+            i = i % 6
+            if i == 0:
+                result = v, t, p
+            if i == 1:
+                result = q, v, p
+            if i == 2:
+                result = p, v, t
+            if i == 3:
+                result = p, q, v
+            if i == 4:
+                result = t, p, v
+            if i == 5:
+                result = v, p, q
 
         return [int(r * 255) for r in result]
 
