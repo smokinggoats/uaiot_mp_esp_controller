@@ -65,18 +65,13 @@ class LEDMatrixService:
         x2, y2 = end
         m = abs((y2 - y1) / (x2 - x1)) if (x2 - x1) != 0 else 0
         b = y1 - m * x1
-        # print(start, end, m, b)
 
-        # print("x range")
         for x in range(x1, x2 + 1):
             y = min(m * x + b, self.width - 1)
-            # print(x, y)
             self.setColor(controller, abs(round(x)), abs(round(y)), color)
 
-        # print("y range")
         for y in range(y1, y2 + 1):
             x = min((y - b) / m if m != 0 else x1, self.height - 1)
-            # print(x, y)
             self.setColor(controller, abs(round(x)), abs(round(y)), color)
 
     async def dance(
@@ -139,7 +134,8 @@ class LEDStripModule:
         else:
             return False
 
-    def rgb_to_hsv(self, r, g, b):
+    def rgb_to_hsv(self, _r, _g, _b):
+        r, g, b = _r / 255, _g / 255, _b / 255
         maxc = max(r, g, b)
         minc = min(r, g, b)
         rangec = maxc - minc
@@ -232,12 +228,12 @@ class LEDStripModule:
 
     async def flicker(self, wait):
         effect_id = 3
+        h, s, v = self.rgb_to_hsv(*self.config.fill_color)
+        h_min, h_max = (h + 0.1) * 0.8, (h + 0.1) * 1.5
+        s_min, s_max = s, s * 1.1
+        v_min, v_max = 0, v * 1.1
         for i in range(self.controller.n):
             # curr_color = self.controller[i]
-            h, s, v = self.rgb_to_hsv(*self.config.fill_color)
-            h_min, h_max = (h + 0.1) * 0.8, (h + 0.1) * 1.5
-            s_min, s_max = s * 0.95, s * 1.05
-            v_min, v_max = v * 0.1, v * 1.1
 
             h_f = max(min(uniform(h_min, h_max), 360), 0)
             s_f = max(min(uniform(s_min, s_max), 100), 0)
