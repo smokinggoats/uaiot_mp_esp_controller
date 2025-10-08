@@ -1,9 +1,20 @@
 from math import floor
 from time import sleep_ms
 import gc
+from random import getrandbits
 import neopixel
 from machine import Pin
 import asyncio
+
+
+def random():
+    k = 32
+    random_integer = getrandbits(k)
+    return random_integer / (2**k)
+
+
+def uniform(a: float, b: float):
+    return a + (b - a) * random()
 
 
 class LedStripConfig:
@@ -121,26 +132,61 @@ class LEDStripModule:
         self.controller[index] = color
         return True
 
-    def hsv_to_rgb(self, _h, s, v):
-        h = _h % 360
-        hi = floor(h / 60) % 6
-        m = ((h) / 60) - hi
-        p = v * (1 - s)
-        q = v * (1 - (m * s))
-        t = v * (1 - ((1 - m) * s))
+    async def delay(self, value, effect):
+        if self.config.selected_effect == effect:
+            await asyncio.sleep(value / 1000)
+            return True
+        else:
+            return False
 
-        opts = {
-            0: (round(v * 255), round(t * 255), round(p * 255)),
-            1: (round(q * 255), round(v * 255), round(p * 255)),
-            2: (round(p * 255), round(v * 255), round(t * 255)),
-            3: (round(p * 255), round(q * 255), round(v * 255)),
-            4: (round(t * 255), round(p * 255), round(v * 255)),
-            5: (round(v * 255), round(p * 255), round(q * 255)),
-        }
+    def rgb_to_hsv(self, r, g, b):
+        maxc = max(r, g, b)
+        minc = min(r, g, b)
+        rangec = maxc - minc
+        v = maxc
+        if minc == maxc:
+            return 0.0, 0.0, v
+        s = rangec / maxc
+        rc = (maxc - r) / rangec
+        gc = (maxc - g) / rangec
+        bc = (maxc - b) / rangec
+        if r == maxc:
+            h = bc - gc
+        elif g == maxc:
+            h = 2.0 + rc - bc
+        else:
+            h = 4.0 + gc - rc
+        h = (h / 6.0) % 1.0
+        return h * 360, s * 100, v * 100
 
-        return opts[hi]
+    def hsv_to_rgb(self, _h, _s, _v):
+        h, s, v = _h / 360, _s / 100, _v / 100
+        if s == 0.0:
+            return v, v, v
+        i = int(h * 6.0)  # XXX assume int() truncates!
+        f = (h * 6.0) - i
+        p = v * (1.0 - s)
+        q = v * (1.0 - s * f)
+        t = v * (1.0 - s * (1.0 - f))
+        i = i % 6
+        result = 0, 0, 0
+        if i == 0:
+            result = v, t, p
+        if i == 1:
+            result = q, v, p
+        if i == 2:
+            result = p, v, t
+        if i == 3:
+            result = p, q, v
+        if i == 4:
+            result = t, p, v
+        if i == 5:
+            result = v, p, q
+
+        return [int(r * 255) for r in result]
 
     async def rainbow_cycle(self, wait):
+        effect_id = 0
         mod = 360 / self.controller.n
         saturation = 100
         value = 100
@@ -155,27 +201,57 @@ class LEDStripModule:
                 pos = round((h * 16) + (mod * i)) % 360
 
                 # convert hue value to RBG
-                self.controller[i] = self.hsv_to_rgb(pos, saturation / 100, value / 100)
+                self.controller[i] = self.hsv_to_rgb(pos, saturation, value)
             # write all pixels after updating them
             self.controller.write()
-            if self.config.selected_effect == 0:
-                await asyncio.sleep(wait / 1000)
-            else:
+            if not await self.delay(wait, effect_id):
                 break
         return True
 
     async def rainbow(self, wait):
+        effect_id = 1
         saturation = 100
         value = 100
         # for each 1% of hue
         for h in range(360):
-            self.controller.fill(self.hsv_to_rgb(h, saturation / 100, value / 100))
+            self.controller.fill(self.hsv_to_rgb(h, saturation, value))
             self.controller.write()
-            if self.config.selected_effect == 1:
-                await asyncio.sleep(wait / 1000)
-            else:
+            if not await self.delay(wait, effect_id):
                 break
         return True
+
+    async def breath(self, wait):
+        effect_id = 2
+        base_color_h, base_color_s, *_ = self.rgb_to_hsv(*self.config.fill_color)
+        v_range = list(range(0, 101)) + list(range(100, -1, -1))
+        for i in v_range:
+            self.controller.fill(self.hsv_to_rgb(base_color_h, base_color_s, i))
+            self.controller.write()
+            if not await self.delay(wait, effect_id):
+                break
+
+    async def flicker(self, wait):
+        effect_id = 3
+        for i in range(self.controller.n):
+            # curr_color = self.controller[i]
+            h, s, v = self.rgb_to_hsv(*self.config.fill_color)
+            h_min, h_max = (h + 0.1) * 0.8, (h + 0.1) * 1.5
+            s_min, s_max = s * 0.95, s * 1.05
+            v_min, v_max = v * 0.1, v * 1.1
+
+            h_f = max(min(uniform(h_min, h_max), 360), 0)
+            s_f = max(min(uniform(s_min, s_max), 100), 0)
+            v_f = max(min(uniform(v_min, v_max), 100), 0)
+
+            self.controller[i] = self.hsv_to_rgb(
+                h_f,
+                s_f,
+                v_f,
+            )
+        wait_min, wait_max = wait * 0.5, wait * 1.5
+        wait_f = uniform(wait_min, wait_max)
+        self.controller.write()
+        await self.delay(wait_f, effect_id)
 
     def clear(self):
         self.controller.fill(self.config.fill_color)
@@ -191,6 +267,10 @@ class LEDStripModule:
                 await self.rainbow_cycle(self.config.animation_delay_ms)
             elif self.config.selected_effect == 1:
                 await self.rainbow(self.config.animation_delay_ms)
+            elif self.config.selected_effect == 2:
+                await self.breath(self.config.animation_delay_ms)
+            elif self.config.selected_effect == 3:
+                await self.flicker(self.config.animation_delay_ms)
             else:
                 self.clear()
             gc.collect()
