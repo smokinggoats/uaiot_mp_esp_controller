@@ -9,7 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
-src/data/config.json
+src/data/*
+!src/data/config.example.json
 src/lib
 *.bin
 venv
