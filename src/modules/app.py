@@ -40,6 +40,18 @@ class App:
             self.led_strip.config.fill_color = cmd_color
             has_changes = True
 
+        hsv = payload.get("hsv", None)
+        if (
+            hsv is not None
+            and isinstance(hsv, list)
+            and len((hsv)) == 3
+            and (0 <= hsv[0] <= 360)
+            and (0 <= hsv[1] <= 100)
+            and (0 <= hsv[2] <= 100)
+        ):
+            self.led_strip.config.fill_color = self.led_strip.hsv_to_rgb(*hsv)
+            has_changes = True
+
         cmd_size = payload.get("size", None)
         if isinstance(cmd_size, int) and cmd_size > 0:
             self.led_strip.config.size = cmd_size
