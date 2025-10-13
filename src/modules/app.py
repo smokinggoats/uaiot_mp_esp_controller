@@ -81,3 +81,4 @@ class App:
             self.cmd_fill(payload)
         elif cmd == "config/show":
             self.cmd_config()
+        gc.collect()

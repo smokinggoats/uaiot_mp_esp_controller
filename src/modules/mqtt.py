@@ -1,7 +1,9 @@
+import gc
 from umqtt.simple import MQTTClient
 import asyncio
 from json import loads, dumps
 import time
+
 
 class MQTTModuleConfig:
     id: str
@@ -47,6 +49,10 @@ class MQTTModule:
         self.client.set_callback(self.message_callback)
         self.client.subscribe(self.config.listener_topic)
 
+        init_payload = self.alive_payload()
+        init_payload["init"] = True
+        self.client.publish(self.config.publish_topic, dumps(init_payload))
+
     def generate_tasks(self):
         return [
             asyncio.create_task(self.alive()),
@@ -60,23 +66,34 @@ class MQTTModule:
             self.cb(payload)
         except Exception as e:
             print(f"Error: {msg} not a valid JSON", e)
+        finally:
+            gc.collect()
+
+    def pad_zero(self, val: int) -> str:
+        return f"0{val}" if val < 10 else val
+
+    def alive_payload(self):
+        [year, _month, _day, _hour, _min, _sec, *_] = time.localtime()
+        month = self.pad_zero(_month)
+        day = self.pad_zero(_day)
+        hour = self.pad_zero(_hour)
+        min = self.pad_zero(_min)
+        sec = self.pad_zero(_sec)
+        now = f"{year}-{month}-{day} {hour}:{min}:{sec}"
+        return {"timestamp": now}
 
     # tasks
 
     async def alive(self):
-        n = 0
         while True:
-            print("publish", n)
-            [year, month, day, hour, min, sec, *_] = time.localtime()
-            now = f"{year}-{month}-{day} {hour}:{min}:{sec}"
-            self.client.publish(
-                self.config.publish_topic, dumps({"ping": "pong", "timestamp": now})
-            )
-            n += 1
+            payload = self.alive_payload()
+            print(payload)
+            self.client.publish(self.config.publish_topic, dumps(payload))
             await asyncio.sleep(self.config.alive_timeout_s)
 
     def publish(self, msg):
         self.client.publish(self.config.publish_topic, msg)
+        gc.collect()
 
     async def load_mqtt_msgs(self):
         while True:

@@ -271,4 +271,3 @@ class LEDStripModule:
             else:
                 self.clear()
             gc.collect()
-            await asyncio.sleep(0)

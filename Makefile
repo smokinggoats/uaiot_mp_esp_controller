@@ -19,8 +19,10 @@ list_files:
 connect:
 	picocom /dev/ttyUSB0 -b115200
 
+HOST ?= angel
+
 upload_config:
-	@SRC=data make upload_file
+	uv run ampy --port /dev/ttyUSB0 put "src/data/config.$(HOST).json" data/config.json
 
 upload_files: upload_config
 # 	@SRC=lib make upload_file
@@ -39,3 +41,5 @@ install:
 esp8266: flash_esp8266
 
 esp32: flash_esp32
+
+deploy: upload_files serial
